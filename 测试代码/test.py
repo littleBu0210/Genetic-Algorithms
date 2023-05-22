@@ -120,16 +120,18 @@ class MyGA(object):
         order = random.sample(range(self.pop_num),self.pop_num)
         From_parent = order[0:self.pop_num-self.elite_num]
         From_elite = order[self.pop_num-self.elite_num:]
+        #从父代中生成子代
         for i in From_parent:
+            #轮盘赌的方法
             rand_num = np.random.uniform()
             for j,cum_val in enumerate(cumulative_p):
                 if(cum_val>rand_num):
                     break
             new_population[i,:] = self.population[j,:]
-
+        #从精英解池中获得子代
         for index,value in enumerate(From_elite):
             new_population[value,:] = self.elite[index,:]
-
+        #更新群体
         self.population = new_population
 
     def cross(self):
@@ -144,6 +146,7 @@ class MyGA(object):
                 continue
             #产生两个随机的位置
             cross_pos = np.sort(random.sample(range(0, self.N), 2))
+            #中间两端互换
             section = self.population[2*i,cross_pos[0]:cross_pos[1]].copy()
             self.population[2*i,cross_pos[0]:cross_pos[1]] = self.population[2*i+1,cross_pos[0]:cross_pos[1]]
             self.population[2*i+1,cross_pos[0]:cross_pos[1]] = section
@@ -158,6 +161,7 @@ class MyGA(object):
             rand_num = np.random.uniform()
             if(rand_num>self.variation_p):
                 continue
+            #变异也只变一位，避免搜索空间过大
             variation_pos = np.random.randint(self.N,dtype=np.uint8)
             self.population[i,variation_pos] = np.mod(self.population[i,variation_pos]+1,2)
 
@@ -167,8 +171,7 @@ class MyGA(object):
 
         #保存精英解中最大值
         self.max_value_elite[times] =  np.max(self.elite_value)
-        # #保存最佳个体
-        # self.best_individual[times,:] = self.population[index,:]
+
 
     def elite_renew(self):
         for i in range(self.pop_num):
@@ -182,6 +185,8 @@ class MyGA(object):
                 self.elite_min_index = index
                 #更新精英解池的最低门限
                 self.elite_th = self.elite_value[index]
+
+    #分段的自适应交叉变异系数，本文件未使用此方法
     def F_adapt(self,k,f_avg,f_max,x):
         return k if x<=f_avg else k*(f_max-x)/(f_max-f_avg)
 
@@ -197,7 +202,7 @@ def GA(W,N,w,v,data_select,res_value):
     :param save_fig_path: 样例i的收敛曲线存储路径
     :return: max_value:求解的放入背包的物品最大价值(int)；best_solu：放入背包的物品序号(list)
     """
-    #-----------------请同学们完成遗传算法-----------
+    #初始化
     ga = MyGA(W,N,w,v)
 
     for i in range(ga.generation):
@@ -217,35 +222,19 @@ def GA(W,N,w,v,data_select,res_value):
         ga.record_best_individual(i)
         #选择
         ga.select()
-
+    #再次计算适应度函数
     ga.fitnessF()
+    #找到最大价值
     max_value = np.max(ga.fitness)
+    #找到最佳解决方案
     best_solu = ga.population[np.argmax(ga.fitness),:]
 
+    #如果比历史最佳高，才保留图片
     if(max_value>res_value):
     #绘图
         plt.clf()
         plt.plot(ga.max_value_pre_gen)
         plt.savefig("测试结果/result"+str(data_select)+".png")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #-----------------以上由同学完成---------------
-
-
 
     return max_value,best_solu
 
@@ -253,32 +242,37 @@ def GA(W,N,w,v,data_select,res_value):
 
 if __name__ == '__main__':
     data_file = "实验代码/data.txt"
-
+    #可以选择的数据种类
     select_data_all = [1,2,3,4,5]
+    #终端输入选择的序号
     data_select = int(input("请输入读取的文件序号(只输入单个数字即可):"))
+    #终端输入迭代的次数
     times = np.uint64(input("请输入迭代的次数(只输入数字即可):"))
+    #判断输入是否合法
     if(data_select not in select_data_all):
         print("请输入 1 2 3 4 5 中的一个数字")
         exit(0)
-
+    #读取文件
     W,N,w,v = read(data_file,data_select)
-
-    str1 = "测试结果/result"+str(data_select)+".txt"
-    if(os.path.isfile(str1)):
-        fileHandler  =  open  (str1,  "r",encoding ='utf-8')
+    #测试文档的路径
+    test_path = "测试结果/result"+str(data_select)+".txt"
+    if(os.path.isfile(test_path)):#如果文件存在
+        fileHandler  =  open  (test_path,  "r",encoding ='utf-8')
+        #第六行保存着最佳值
         line  =  fileHandler.readlines()[5]
+        #第六行第一个“：”后的数字就是历史最大价值
         res_value = int(line.split('：')[1])
-    else:
+    else:#如果文件不存在，则定义价值为-1
         res_value = -1
-
+    #判断是否要写txt文件的标志位
     new_write = 0
-
+    #开始循环
     for j in range(times):
-        #计时
+        #计时开始
         start_time = time.time()
-
+        #开始计算
         max_value,best_solu = GA(W,N,w,v,data_select,res_value)
-
+        #计时结束
         end_time = time.time()
 
         #判断结果准确性
@@ -289,12 +283,14 @@ if __name__ == '__main__':
 
         #如果大于当前已知的值，则更新txt文档
         if(max_value>res_value):
+            #保存参数
             res_value = max_value
             res_solu = best_solu
             res_T = end_time-start_time
             #写入标志位
             new_write=1
             print("出现更大的值")
+    #写入txt文件
     if(new_write==1):
         with open("测试结果/result"+str(data_select)+".txt","w",encoding ='utf-8') as f:
             f.write("背包最大承重：{}\n".format(W))

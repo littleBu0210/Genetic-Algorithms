@@ -6,22 +6,6 @@ import matplotlib.pyplot as plt
 
 import os
 
-class Logger(object):
-    """
-    输出控制台
-    """
-    def __init__(self, fileN="result1.txt"):
-        self.terminal = sys.stdout
-        self.log = open(fileN, "a")
-
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-
-    def flush(self):
-        pass
-
-
 def read(data_file,i):
     """
     读取txt文件

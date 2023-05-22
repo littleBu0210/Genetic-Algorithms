@@ -1,9 +1,7 @@
 import numpy as np
 import time
-import sys
 import random
 import matplotlib.pyplot as plt
-
 import os
 
 def read(data_file,i):
@@ -30,10 +28,8 @@ def read(data_file,i):
 
 class MyGA(object):
     #类属性
-
-    # generation = 1000           #迭代的代数
-    cross_p_max = 0.7           #自适应交叉概率最大值.4
-    variation_p_max = 0.4       #自适应变异概率最大值
+    cross_p = 0.6
+    variation_p = 0.2
     pop_num = 100               #种群内个体数目
     cross_num = int(pop_num/2)  #交叉的对数
     #精英解参数
@@ -57,6 +53,7 @@ class MyGA(object):
         self.N = N
         self.w = w
         self.v = v
+        #迭代的代数采用十倍的物品数量
         self.generation = self.N*10
         #定义一个元组，便于表达数组大小
         self.shape =(self.pop_num,N)
@@ -70,7 +67,7 @@ class MyGA(object):
         self.elite_value = np.zeros(shape=self.elite_num,dtype=np.uint32)
         #记录每一轮精英解池的最大值
         self.max_value_elite = np.zeros(self.generation,dtype=np.int32)
-        # self.best_individual = np.zeros(shape=(self.generation,N),dtype=np.int32)
+
 
 
 
@@ -143,10 +140,7 @@ class MyGA(object):
         for i in range(self.cross_num):
             #先判断要不要进行交叉
             rand_num = np.random.uniform()
-            # max_fitness = np.max([self.fitness[2*i],self.fitness[2*i+1]])
-            # cross_p = self.F_adapt(self.cross_p_max,self.avg_fitness,self.max_fitness,max_fitness)
-            cross_p = 0.6
-            if(rand_num>cross_p):
+            if(rand_num>self.cross_p):
                 continue
             #产生两个随机的位置
             cross_pos = np.sort(random.sample(range(0, self.N), 2))
@@ -162,9 +156,7 @@ class MyGA(object):
         for i in range(self.pop_num):
             #先判断要不要进行变异
             rand_num = np.random.uniform()
-            # variation_p = self.F_adapt(self.variation_p_max,self.avg_fitness,self.max_fitness,self.fitness[i])
-            variation_p = 0.2
-            if(rand_num>variation_p):
+            if(rand_num>self.variation_p):
                 continue
             variation_pos = np.random.randint(self.N,dtype=np.uint8)
             self.population[i,variation_pos] = np.mod(self.population[i,variation_pos]+1,2)

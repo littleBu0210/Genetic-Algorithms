@@ -198,7 +198,6 @@ def GA(W,N,w,v):
     :param save_fig_path: 样例i的收敛曲线存储路径
     :return: max_value:求解的放入背包的物品最大价值(int)；best_solu：放入背包的物品序号(list)
     """
-    #-----------------请同学们完成遗传算法-----------
     ga = MyGA(W,N,w,v)
 
     for i in range(ga.generation):
@@ -220,7 +219,7 @@ def GA(W,N,w,v):
     ga.fitnessF()
     max_value = np.max(ga.fitness)
     best_solu = ga.population[np.argmax(ga.fitness),:]
-    #-----------------以上由同学完成---------------
+
 
 
 
